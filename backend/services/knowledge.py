@@ -1,7 +1,8 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
-from backend.database.models import Chapter, KnowledgePoint, LearningProgress, Note, Section
+from backend.database.models import Chapter, KnowledgePoint, LearningProgress, Note, NoteProfile, Section, now_utc
+from backend.schemas.knowledge import NoteUpdate
 
 
 def find_chapter(session: Session, chapter_id: str) -> Chapter | None:
@@ -33,10 +34,16 @@ def set_status(session: Session, point: KnowledgePoint, status: str) -> Knowledg
     return find_point(session, point.id)
 
 
-def set_note(session: Session, point: KnowledgePoint, content: str) -> KnowledgePoint:
+def set_note(session: Session, point: KnowledgePoint, payload: NoteUpdate) -> KnowledgePoint:
     note = point.note or Note(point_id=point.id)
-    note.content = content
+    note.content = payload.content
+    note.updated_at = now_utc()
     session.add(note)
+    if payload.profile is not None:
+        profile = session.get(NoteProfile, point.id) or NoteProfile(point_id=point.id)
+        profile.category = payload.profile.category
+        profile.language_entries = [entry.model_dump() for entry in payload.profile.language_entries]
+        session.add(profile)
     session.commit()
     session.refresh(point)
     return find_point(session, point.id)

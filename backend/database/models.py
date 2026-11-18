@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
+from typing import Any
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
+from sqlalchemy import JSON, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .core import Base
@@ -72,3 +73,11 @@ class SchemaVersion(Base):
     __tablename__ = "schema_versions"
     version: Mapped[int] = mapped_column(Integer, primary_key=True)
     applied_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc)
+
+
+class NoteProfile(Base):
+    """P1 metadata alongside, rather than a migration of, legacy note text."""
+    __tablename__ = "note_profiles"
+    point_id: Mapped[str] = mapped_column(ForeignKey("knowledge_points.id"), primary_key=True)
+    category: Mapped[str] = mapped_column(String(20))
+    language_entries: Mapped[list[dict[str, Any]]] = mapped_column(JSON)

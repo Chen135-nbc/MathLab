@@ -1,24 +1,23 @@
 # MathLab 架构说明
 
-## 本地运行边界
+## 运行与数据边界
 
-前端 Vite 与 FastAPI 是两个独立进程，默认分别监听 `127.0.0.1:5174` 和 `127.0.0.1:8000`。前端只通过 `/api` 请求读写课程与学习数据。SQLite 位于本机 `data/`，不提供账户、同步或外网访问能力。
+Vite 和 FastAPI 默认分别监听 `127.0.0.1:5174` 与 `127.0.0.1:8000`；浏览器通过同源 `/api` 访问服务。SQLite 路径由 `pathlib` 与 SQLAlchemy URL 处理，支持 `MATHLAB_DATA_DIR` 和 `MATHLAB_DATABASE_PATH`。不依赖 macOS 专属服务，开发启动脚本之外可用标准 Python 与 npm 命令运行。
 
-## 数据边界
+课程种子独立于个人数据。`Volume → Chapter → Section → KnowledgePoint` 仍用原有稳定 ID；种子重载只更新课程字段。`Note` 与 `LearningProgress` 仍按知识点 ID 保存。本次升级标记版本 2，通过 `create_all` 增建以下表，无需修改旧表结构：
 
-`curriculum/high_school/renjiao_a_2019.json` 是可版本控制的课程种子。`Volume → Chapter → Section → KnowledgePoint` 构成教材目录及其关联的知识节点，其中目录实体与知识节点分表保存。各 ID 稳定，不由标题推导。`LearningProgress` 和 `Note` 以知识点 ID 为主键，属本机个人数据。课程同步按 ID 更新课程字段，只插入或修改目录与知识点，不删除个人记录，也不触碰笔记和状态。
+| 表 | 作用 |
+| --- | --- |
+| `note_profiles` | 按知识点 ID 保存一项内容分类以及多语言条目。每条包括语言代码、类型、正文和来源；同一概念无需复制知识节点。 |
+| `studio_models` | 以 UUID 保存名称、表达式、参数、视图、说明及创建和修改时间。参数与视图使用带校验的 JSON。 |
+| `studio_model_points` | 模型与知识点的多对多关系，两个方向都使用数据库外键校验。 |
 
-当前数据库记录 `schema_versions` 的初始版本 1。第一阶段只有初始建表；今后的结构变更应引入 Alembic 迁移，避免直接依赖 `create_all` 修改已有表。发布新课程种子前应检查 ID 不变与删除影响。
+笔记正文与可选档案通过原 `PUT /api/knowledge/{id}/note` 一次保存，旧客户端只提交正文时保留档案。模型通过 `GET/POST /api/models` 与 `GET/PUT /api/models/{id}` 读取和保存，列表可按 `point_id` 筛选。一次保存同时更新模型与关联。用户编辑时间按 UTC 存储，界面使用浏览器本地时区展示。若未来修改既有表，应该引入显式版本迁移。
 
-## API 与前端组织
+## 前端
 
-`backend/api` 做路由、参数校验和 HTTP 错误；`backend/services` 负责课程同步；`backend/database` 定义持久化模型；`backend/schemas` 定义外部响应。前端 `services/api.ts` 统一请求、类型和错误处理。知识库模块负责目录、详情与笔记，其他模块是独立页面入口。
+Math Notes 复用目录、知识点详情、Markdown 和 KaTeX。它将当前草稿实时送入预览，保存后写入本机数据库。外部链接由用户点击打开；预览不会自动载入远程图片。本轮没有附件上传。
 
-## 未来实体
+Math Studio 的表达式模块通过有限长度的词法和递归下降解析构建数值函数，变量通过参数 Map 取值，函数和常量来自白名单，不执行任意代码；API 存储表达式文本，不在服务器运行表达式。绘图区按视口像素采样，以有限值和中点检查断开常见不连续区域；极窄振荡或奇点仍可能被采样遗漏。坐标中心与单位像素比例作为视图数据一起保存。
 
-- `Relation`：以 `source_point_id` 和 `target_point_id` 连接两个知识点，并保存关系类型（前置、推导、等价、推广、应用等）。
-- `Model`：以模型 ID 管理本地文件；可通过知识点 ID 建立多对多关联。
-- `Exercise`：记录教辅书、题号和题型，以知识点 ID 关联；`Attempt` 引用练习 ID，记录作答与错因。
-- `Skill`：描述能力树节点；`SkillEvidence` 引用能力 ID、知识点 ID 和可选作答 ID，保留证据来源。学习状态与能力评价分离。
-
-知识拓展导入未来先进入待审核数据区，再由用户确认归属知识点 ID。第一阶段不连接 AI 服务。
+`/knowledge/:pointId` 与 `/modeling/:modelId?` 分别对应笔记和模型页面。笔记进入模型时携带来源知识点 ID，返回链接在页面刷新后仍有效。从笔记新建会默认选中该知识点，保存后才能在两边看见此关联。旧图谱、练习路由保留作为历史入口，主导航仅展示 P1 模块。
