@@ -75,3 +75,17 @@ def test_studio_model_save_rename_link_update_and_reopen(database):
         assert [entry["id"] for entry in saved["points"]] == points[1:]
         assert reopened.get("/api/models", params={"point_id": points[0]}).json() == []
         assert reopened.get("/api/models").json()[0]["id"] == created["id"]
+
+
+def test_latex_note_survives_database_reopen(database):
+    """The assistant's Markdown payload uses the unchanged persistence API."""
+    main, _ = database
+    content = "# 公式笔记\n\n行内 $A \\cap B$。\n\n$$\nx=\\frac{-b\\pm\\sqrt{b^2-4ac}}{2a}\n$$\n\n原笔记尾部"
+    path = "/api/knowledge/ks-bx1-001"
+    with TestClient(main.app) as client:
+        saved = client.put(path + "/note", json={"content": content})
+        assert saved.status_code == 200
+        assert client.get(path).json()["note"] == content
+    main.engine.dispose()
+    with TestClient(main.app) as restarted:
+        assert restarted.get(path).json()["note"] == content

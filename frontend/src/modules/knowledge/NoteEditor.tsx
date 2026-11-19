@@ -1,7 +1,11 @@
-import { useDeferredValue, useState } from 'react'
+import { useDeferredValue, useRef, useState } from 'react'
 import { FilePenLine, Save } from 'lucide-react'
 import { MathMarkdown } from '../../components/MathMarkdown'
 import type { LanguageEntry, NoteCategory, NoteProfile, PointDetail } from '../../types/knowledge'
+import { LatexAssistant } from './latex/LatexAssistant'
+import { markdownFormula, renderFormula, type FormulaMode, type Selection } from './latex/formulaTools'
+import { useNoteInsertion } from './latex/useNoteInsertion'
+import './latex/latex.css'
 
 const categories: Record<NoteCategory, string> = { basic: '基础知识', extension: '拓展知识', preview: '进阶预览', research: '个人研究' }
 
@@ -19,6 +23,34 @@ interface Props {
 export function NoteEditor({ point, content, profile, onContent, onProfile, onSave, dirty, saving }: Props) {
   const [mode, setMode] = useState<'edit' | 'preview' | 'both'>('both')
   const preview = useDeferredValue(content)
+  const editing = useNoteInsertion(content, onContent)
+  const [assistant, setAssistant] = useState<'editor' | 'guide' | null>(null)
+  const insertionRange = useRef<Selection>({ start: 0, end: 0 })
+  const [selectedText, setSelectedText] = useState('')
+  const restoreNoteFocus = () => requestAnimationFrame(() => {
+    const element = editing.textarea.current
+    if (element) {
+      element.focus()
+      element.setSelectionRange(editing.selection.current.start, editing.selection.current.end)
+    }
+  })
+  const openAssistant = (tab: 'editor' | 'guide') => {
+    editing.capture()
+    insertionRange.current = { ...editing.selection.current }
+    const selected = content.slice(insertionRange.current.start, insertionRange.current.end)
+    setSelectedText(selected.startsWith('$$') && selected.endsWith('$$') ? selected.slice(2, -2).trim()
+      : selected.startsWith('$') && selected.endsWith('$') ? selected.slice(1, -1) : selected)
+    setAssistant(tab)
+  }
+  const insertFormula = (latex: string, formulaMode: FormulaMode) => {
+    const rendered = renderFormula(latex, formulaMode)
+    if (rendered.error) throw new Error(rendered.error)
+    const insertion = markdownFormula(content, insertionRange.current, latex, formulaMode)
+    setMode(current => current === 'preview' ? 'both' : current)
+    editing.insert(insertion, insertionRange.current)
+    setAssistant(null)
+    restoreNoteFocus()
+  }
   const entries = profile.language_entries
   const setEntries = (language_entries: LanguageEntry[]) => onProfile({ ...profile, language_entries })
   const update = (index: number, patch: Partial<LanguageEntry>) =>
@@ -33,13 +65,18 @@ export function NoteEditor({ point, content, profile, onContent, onProfile, onSa
         <button key={id} type="button" aria-pressed={mode === id} onClick={() => setMode(id)}>{label}</button>)}</div>
     </div>
     <p className="p1-help">支持 Markdown 标题、列表、表格和链接。行内公式用 <code>$...$</code>；块公式的两行 <code>$$</code> 各自独占一行。</p>
+    <div className="p1-toolbar"><button className="p1-button" disabled={saving} onClick={() => openAssistant('editor')}>Σ 数学公式</button>
+      <button className="text-button" disabled={saving} onClick={() => openAssistant('guide')}>LaTeX 使用手册</button></div>
     <div className={mode === 'both' ? 'p1-editor-split' : ''}>
-      {mode !== 'preview' && <textarea aria-label="个人知识笔记" rows={14} value={content} maxLength={100000}
-        onChange={e => onContent(e.target.value)} placeholder="写下你的证明、反例、应用，或读教材时想追问的问题。"/>}
+      {mode !== 'preview' && <textarea ref={editing.textarea} aria-label="个人知识笔记" rows={14} value={content} maxLength={100000}
+        onSelect={editing.capture} onBlur={editing.capture} onBeforeInput={editing.onBeforeInput} onKeyDown={editing.onKeyDown}
+        onCompositionStart={editing.onCompositionStart} onCompositionEnd={editing.onCompositionEnd}
+        onChange={editing.onChange} placeholder="写下你的证明、反例、应用，或读教材时想追问的问题。"/>}
       {mode !== 'edit' && <div className="p1-preview" aria-label="笔记预览">
         {preview.trim() ? <MathMarkdown text={preview}/> : <p className="p1-help">输入笔记后，这里会显示渲染结果。</p>}
       </div>}
     </div>
+    {assistant && <LatexAssistant onClose={() => { setAssistant(null); restoreNoteFocus() }} onInsert={insertFormula} initialTab={assistant} initialSelection={selectedText}/>}
     <div className="p1-stack language-entries">
       <div className="p1-toolbar"><h3>多语言资料</h3><button className="p1-button" type="button" disabled={entries.length >= 50}
         onClick={() => setEntries([...entries, { language: 'en', kind: 'term', text: '', source: '' }])}>添加条目</button></div>

@@ -1,0 +1,46 @@
+.latex-library-entry { margin-bottom: 18px; }
+.latex-dialog {
+  color: var(--ink); background: var(--surface); border: 1px solid var(--line);
+  border-radius: 14px; padding: 24px; width: min(1160px, 94vw); max-width: 94vw;
+  max-height: 90vh; overflow: auto; margin: auto; box-shadow: 0 22px 80px #0005;
+}
+.latex-dialog::backdrop { background: #08152599; }
+.latex-dialog-header { display: flex; justify-content: space-between; align-items: start; gap: 15px; margin-bottom: 16px; }
+.latex-dialog h2 { font-weight: 750; font-size: 20px; }
+.latex-dialog h3 { font-weight: 700; font-size: 16px; }
+.latex-dialog h4 { font-weight: 700; font-size: 13px; }
+.latex-dialog > .p1-segments { margin-bottom: 18px; }
+.latex-dialog .p1-help { white-space: pre-wrap; }
+.latex-dialog label { display: grid; font-size: 13px; gap: 6px; }
+.latex-dialog input:not([type=radio]), .latex-dialog textarea {
+  width: 100%; min-width: 0; border: 1px solid var(--line); border-radius: 7px;
+  padding: 10px; background: var(--bg); color: var(--ink);
+}
+.latex-dialog textarea { font: 13px/1.6 ui-monospace, Menlo, Consolas, monospace; resize: vertical; }
+.latex-dialog :is(button, input, textarea):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.latex-guide-layout { display: grid; grid-template-columns: 150px minmax(170px, .7fr) minmax(0, 1.3fr); gap: 16px; align-items: start; }
+.latex-categories { display: grid; gap: 4px; }
+.latex-categories button { text-align: left; font-size: 12px; padding: 9px; border-radius: 7px; color: var(--ink); }
+.latex-categories button[aria-pressed=true], .latex-result[aria-pressed=true] { background: var(--pale); color: var(--accent); outline: 1px solid var(--accent); outline-offset: -1px; }
+.latex-categories button:hover, .latex-result:hover { background: var(--pale); }
+.latex-results { display: grid; gap: 7px; max-height: 58vh; overflow: auto; padding: 2px; }
+.latex-result { display: grid; text-align: left; padding: 10px; gap: 5px; border: 1px solid var(--line); border-radius: 7px; }
+.latex-result strong { font-size: 12px; }
+.latex-result code { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.latex-detail { min-width: 0; }
+.latex-code { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 12px; }
+.latex-preview { padding: 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--pale); overflow: auto; min-height: 64px; }
+.latex-preview .katex-display { margin: .25em 0; }
+.latex-mode { display: flex; flex-wrap: wrap; gap: 14px; border: 0; }
+.latex-mode legend { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+.latex-dialog .latex-mode label { display: flex; align-items: center; gap: 5px; }
+.latex-mode input { accent-color: var(--accent); }
+.latex-palette { display: flex; flex-wrap: wrap; gap: 7px; }
+@media (max-width: 900px) {
+  .latex-guide-layout { grid-template-columns: minmax(130px, .6fr) minmax(0, 1fr); }
+  .latex-categories { grid-column: 1 / -1; display: flex; flex-wrap: wrap; }
+}
+@media (max-width: 560px) {
+  .latex-guide-layout { grid-template-columns: minmax(0, 1fr); }
+  .latex-results { max-height: 180px; }
+}

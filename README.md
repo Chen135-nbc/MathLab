@@ -32,6 +32,10 @@ npm --prefix frontend run dev
 
 后端 API 文档位于 <http://127.0.0.1:8000/docs>。Vite 将 `/api` 转发给本机后端。
 
+## LaTeX 公式助手
+
+Math Notes 新增「LaTeX 使用手册」和笔记区「Σ 数学公式」。支持 9 类共 56 个条目的检索、复制、模板编辑、实时预览与光标插入；操作说明和测试见 [公式助手说明](docs/latex-assistant.md)。使用原有依赖和保存接口，无需重新初始化数据库。
+
 ## 数据保存与备份
 
 笔记、分类、多语言资料和模型都保存在 `data/mathlab.sqlite3`。P1 启动时只增建所需的数据表并继续复用原有笔记和知识点 ID。手动初始化或重新导入课程种子可运行 `.venv/bin/python -m scripts.init_db`，重复初始化不会覆盖个人资料。
