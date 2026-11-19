@@ -51,6 +51,19 @@ class KnowledgePoint(Base):
     section: Mapped[Section] = relationship(back_populates="knowledge_points")
     progress: Mapped["LearningProgress | None"] = relationship(back_populates="point", uselist=False)
     note: Mapped["Note | None"] = relationship(back_populates="point", uselist=False)
+    management: Mapped["KnowledgeMeta | None"] = relationship(uselist=False, lazy="joined")
+
+    @property
+    def description(self):
+        return self.management.description if self.management else ""
+
+    @property
+    def archived(self):
+        return self.management.archived if self.management else False
+
+    @property
+    def deleted(self):
+        return self.management.deleted if self.management else False
 
 
 class LearningProgress(Base):
@@ -81,3 +94,21 @@ class NoteProfile(Base):
     point_id: Mapped[str] = mapped_column(ForeignKey("knowledge_points.id"), primary_key=True)
     category: Mapped[str] = mapped_column(String(20))
     language_entries: Mapped[list[dict[str, Any]]] = mapped_column(JSON)
+
+
+class KnowledgeMeta(Base):
+    __tablename__ = "knowledge_meta"
+    point_id: Mapped[str] = mapped_column(ForeignKey("knowledge_points.id"), primary_key=True)
+    description: Mapped[str] = mapped_column(Text, default="")
+    archived: Mapped[bool] = mapped_column(default=False)
+    deleted: Mapped[bool] = mapped_column(default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc, onupdate=now_utc)
+
+
+class SectionNote(Base):
+    __tablename__ = "section_notes"
+    section_id: Mapped[str] = mapped_column(ForeignKey("sections.id"), primary_key=True)
+    content: Mapped[str] = mapped_column(Text, default="")
+    profile: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc, onupdate=now_utc)

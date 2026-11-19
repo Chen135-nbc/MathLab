@@ -1,0 +1,29 @@
+.mind-workspace { max-width: 1700px; margin: 0 auto; }
+.mind-workspace-grid { display: grid; grid-template-columns: minmax(0,1fr) 235px; gap: 16px; align-items: start; }
+.mind-edit-grid { display: grid; grid-template-columns: minmax(0,1fr) 290px; gap: 14px; align-items: start; }
+.mind-canvas { height: 650px; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--surface); }
+.mind-canvas:focus-visible { outline: 2px solid var(--accent); }
+.mind-canvas .react-flow { --xy-background-color: var(--surface); --xy-edge-stroke: #7d94b0; --xy-edge-stroke-width: 2px; --xy-controls-button-background-color: var(--surface); --xy-controls-button-color: var(--ink); }
+.mind-thought { border: 2px solid #7f99bb; border-left: 6px solid #476b9b; height: 100px; padding: 9px 12px; border-radius: 10px; background: var(--surface); color: var(--ink); box-shadow: var(--shadow); display: flex; flex-direction: column; justify-content: space-between; }
+.mind-thought.mind-teal { border-color: #65a6a2; border-left-color: #32847e; }
+.mind-thought.mind-amber { border-color: #c6a05f; border-left-color: #9c741a; }
+.mind-thought.mind-rose { border-color: #c3889c; border-left-color: #ae5774; }
+.react-flow__node.selected .mind-thought { outline: 3px solid var(--accent); outline-offset: 4px; }
+.mind-node-title { max-height: 55px; overflow: auto; }
+.mind-node-title .markdown-content { font-size: 14px; line-height: 1.4; overflow-wrap: anywhere; }
+.mind-node-title .markdown-content p { margin: 0; }
+.mind-node-title .katex-display { margin: 0; }
+.mind-node-footer { display: flex; justify-content: flex-end; align-items: center; gap: 8px; font-size: 10px; color: var(--muted); }
+.mind-node-footer button { background: var(--pale); color: var(--accent); padding: 1px 5px; border-radius: 4px; }
+.mind-inspector-fieldset { min-width: 0; }
+.mind-inspector .mind-checkbox { display: flex; align-items: center; font-weight: 400; }
+.mind-inspector .mind-checkbox input { width: auto; }
+.mind-search-results { max-height: 180px; overflow: auto; }
+.mind-link-editor { border-top: 1px solid var(--line); padding-top: 15px; }
+.mind-library-item { border-top: 1px solid var(--line); padding-top: 12px; }
+.mind-card-link { color: var(--accent); text-decoration: underline; }
+.p2-point-row { border-bottom: 1px solid var(--line); padding-bottom: 9px; }
+.mind-workspace h1 { font-size: 30px; margin-top: 8px; font-weight: 750; }
+.mind-workspace .page-heading p { margin-top: 5px; }
+@media(max-width: 1450px) { .mind-workspace-grid { grid-template-columns: minmax(0,1fr); } .mind-library { order: 2; } }
+@media(max-width: 1050px) { .mind-edit-grid { grid-template-columns: minmax(0,1fr); } .mind-canvas { height: 500px; } }

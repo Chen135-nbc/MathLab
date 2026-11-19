@@ -1,10 +1,11 @@
 import { Link } from 'react-router'
-import { ArrowRight, BookOpen, Boxes, Sparkles } from 'lucide-react'
+import { ArrowRight, BookOpen, Boxes, Network, Sparkles } from 'lucide-react'
 import { useRecent } from '../app/useRecent'
 
 const modules = [
   { to: '/knowledge', icon: BookOpen, count: '01', title: 'Math Notes', description: '按教材组织知识，记录公式、概念与个人理解。', available: true },
   { to: '/modeling', icon: Boxes, count: '02', title: 'Math Studio', description: '绘制自定义函数，探索参数，把模型关联到知识点。', available: true },
+  { to: '/mindmaps', icon: Network, count: '03', title: 'Mind Map', description: '把想法整理成分支，让重要节点连接到知识卡。', available: true },
 ]
 
 export function Dashboard() {

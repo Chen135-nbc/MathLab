@@ -1,7 +1,8 @@
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints
+from typing import Annotated
 
 
 Status = Literal["not_started", "learning", "learned", "review"]
@@ -26,6 +27,9 @@ class PointSummary(BaseModel):
     title: str
     kind: str
     sort_order: int
+    description: str = ""
+    archived: bool = False
+    deleted: bool = False
 
 
 class SectionOut(BaseModel):
@@ -57,6 +61,7 @@ class PointDetail(BaseModel):
     id: str
     title: str
     kind: str
+    sort_order: int
     formula: str | None
     section_id: str
     section_title: str
@@ -67,6 +72,10 @@ class PointDetail(BaseModel):
     note: str
     note_updated_at: datetime | None
     note_profile: NoteProfileData = Field(default_factory=NoteProfileData)
+    description: str = ""
+    archived: bool = False
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
 
 
 class StatusUpdate(BaseModel):
@@ -76,3 +85,25 @@ class StatusUpdate(BaseModel):
 class NoteUpdate(BaseModel):
     content: str = Field(max_length=100_000)
     profile: NoteProfileData | None = None
+
+
+class PointWrite(BaseModel):
+    title: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=120)]
+    description: str = Field(default="", max_length=4000)
+    section_id: str = Field(min_length=1, max_length=50)
+
+
+class PointChange(PointWrite):
+    archived: bool = False
+
+
+class ReorderPoints(BaseModel):
+    point_ids: list[str] = Field(max_length=2000)
+
+
+class SectionDetail(SectionOut):
+    chapter_title: str
+    volume_title: str
+    content: str
+    profile: NoteProfileData
+    updated_at: datetime | None

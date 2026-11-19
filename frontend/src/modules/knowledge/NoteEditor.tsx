@@ -10,7 +10,7 @@ import './latex/latex.css'
 const categories: Record<NoteCategory, string> = { basic: '基础知识', extension: '拓展知识', preview: '进阶预览', research: '个人研究' }
 
 interface Props {
-  point: PointDetail
+  point: Pick<PointDetail, 'note_updated_at'>
   content: string
   profile: NoteProfile
   onContent: (value: string) => void

@@ -1,7 +1,7 @@
-import type { Chapter, LearningStatus, NoteProfile, PointDetail, PointSummary, Volume } from '../types/knowledge'
+import type { Chapter, LearningStatus, NoteProfile, PointDetail, PointSummary, PointWrite, SectionDetail, Volume } from '../types/knowledge'
 import type { ModelDetail, ModelDraft, ModelSummary } from '../types/studio'
 
-async function request<T>(path: string, options?: RequestInit): Promise<T> {
+export async function request<T>(path: string, options?: RequestInit): Promise<T> {
   let response: Response
   try { response = await fetch(`/api${path}`, { headers: { 'Content-Type': 'application/json' }, ...options }) }
   catch { throw new Error('无法连接本地服务，请确认后端已启动。') }
@@ -14,6 +14,19 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 export const api = {
+  section: (id: string) => request<SectionDetail>(`/sections/${encodeURIComponent(id)}`),
+  sectionNote: (id: string, content: string, profile: NoteProfile) => request<SectionDetail>(`/sections/${encodeURIComponent(id)}/note`, {
+    method: 'PUT', body: JSON.stringify({ content, profile }),
+  }),
+  reorderPoints: (sectionId: string, point_ids: string[]) => request<SectionDetail>(`/sections/${encodeURIComponent(sectionId)}/order`, {
+    method: 'PUT', body: JSON.stringify({ point_ids }),
+  }),
+  createPoint: (payload: PointWrite) => request<PointDetail>('/knowledge', { method: 'POST', body: JSON.stringify(payload) }),
+  managePoint: (id: string, payload: PointWrite & { archived: boolean }) => request<PointDetail>(`/knowledge/${encodeURIComponent(id)}`, {
+    method: 'PUT', body: JSON.stringify(payload),
+  }),
+  deletePoint: (id: string) => request<{ deleted: string }>(`/knowledge/${encodeURIComponent(id)}?confirm=true`, { method: 'DELETE' }),
+  pointMaps: (id: string) => request<{ map_id: string; map_title: string; node_id: string; node_title: string }[]>(`/knowledge/${encodeURIComponent(id)}/mindmaps`),
   curriculum: () => request<Volume[]>('/curriculum'),
   chapter: (id: string) => request<Chapter>(`/chapters/${encodeURIComponent(id)}`),
   point: (id: string) => request<PointDetail>(`/knowledge/${encodeURIComponent(id)}`),

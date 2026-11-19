@@ -2,16 +2,16 @@ import json
 from pathlib import Path
 
 from sqlalchemy import select
-from sqlalchemy.orm import Session, selectinload
+from sqlalchemy.orm import Session, selectinload, with_loader_criteria
 
-from backend.database.models import Chapter, KnowledgePoint, Section, Volume
+from backend.database.models import Chapter, KnowledgeMeta, KnowledgePoint, Section, Volume
 
 
 SEED_FILE = Path(__file__).resolve().parents[2] / "curriculum" / "high_school" / "renjiao_a_2019.json"
 
 
 def seed_curriculum(session: Session) -> None:
-    """Upsert only published curriculum fields; never touch notes or progress."""
+    """Sync textbook structure only. Knowledge points belong to the user."""
     data = json.loads(SEED_FILE.read_text(encoding="utf-8"))
     for volume_data in data["volumes"]:
         volume = session.get(Volume, volume_data["id"]) or Volume(id=volume_data["id"])
@@ -31,16 +31,14 @@ def seed_curriculum(session: Session) -> None:
                 section.title = section_data["title"]
                 section.sort_order = section_data["sort_order"]
                 session.add(section)
-                for point_data in section_data["knowledge_points"]:
-                    point = session.get(KnowledgePoint, point_data["id"]) or KnowledgePoint(id=point_data["id"])
-                    point.section_id = section.id
-                    point.title = point_data["title"]
-                    point.kind = point_data["kind"]
-                    point.sort_order = point_data["sort_order"]
-                    point.formula = point_data.get("formula")
-                    session.add(point)
     session.commit()
 
 
 def curriculum_tree(session: Session):
-    return session.scalars(select(Volume).options(selectinload(Volume.chapters).selectinload(Chapter.sections).selectinload(Section.knowledge_points)).order_by(Volume.sort_order)).all()
+    return session.scalars(
+        select(Volume).options(
+            selectinload(Volume.chapters).selectinload(Chapter.sections).selectinload(Section.knowledge_points),
+            with_loader_criteria(KnowledgePoint, ~KnowledgePoint.management.has(KnowledgeMeta.deleted.is_(True))
+                                 & ~KnowledgePoint.management.has(KnowledgeMeta.archived.is_(True))),
+        ).order_by(Volume.sort_order)
+    ).all()

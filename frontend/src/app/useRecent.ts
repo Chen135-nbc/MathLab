@@ -22,3 +22,8 @@ export function rememberPoint(point: RecentPoint) {
   localStorage.setItem(KEY, JSON.stringify([point, ...readRecent().filter(item => item.id !== point.id)].slice(0, 5)))
   window.dispatchEvent(new Event('mathlab-recent'))
 }
+
+export function forgetPoint(id: string) {
+  localStorage.setItem(KEY, JSON.stringify(readRecent().filter(point => point.id !== id)))
+  window.dispatchEvent(new Event('mathlab-recent'))
+}

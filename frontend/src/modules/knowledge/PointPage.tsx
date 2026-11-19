@@ -9,6 +9,8 @@ import { MathMarkdown } from '../../components/MathMarkdown'
 import { NoteEditor } from './NoteEditor'
 import { LinkedModels } from './LinkedModels'
 import { OptionalProgress } from './OptionalProgress'
+import { PointManagement } from './PointManagement'
+import { LinkedMindMaps } from './LinkedMindMaps'
 import type { NoteProfile, PointDetail } from '../../types/knowledge'
 
 export function PointPage() {
@@ -67,6 +69,10 @@ function PointWorkspace({ pointId }: { pointId: string }) {
           {notice && <div className="p1-help" role="status">{notice}</div>}
         </div>
         <aside className="p1-stack">
+          <PointManagement point={point} onSaved={value => {
+            setPoint(value); rememberPoint({ id: value.id, title: value.title, chapter: value.chapter_title })
+          }} dirty={dirty}/>
+          <LinkedMindMaps pointId={point.id}/>
           <LinkedModels pointId={point.id}/>
           <section className="panel information-panel p1-stack">
             <div className="panel-heading"><h2>课程位置</h2><BookOpen size={18}/></div>
